@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { RESERVATION_HOLD_MS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { invalidateProductsCache } from "@/lib/redis-cache";
+import {
+  getIdempotentReservationId,
+  isReservationRateLimited,
+  registerReservationExpiry,
+  setIdempotentReservationId,
+} from "@/lib/redis-reservations";
+import { getPendingReservations } from "@/lib/reservations.server";
 import { z } from "zod";
 
 const ReserveSchema = z.object({
@@ -8,8 +17,37 @@ const ReserveSchema = z.object({
   quantity: z.number().int().positive(),
 });
 
+const reservationInclude = {
+  product: { select: { id: true, name: true } },
+  warehouse: { select: { id: true, name: true } },
+} as const;
+
+export async function GET() {
+  try {
+    return NextResponse.json(await getPendingReservations());
+  } catch (err) {
+    console.error("[GET /api/reservations]", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
+    const clientIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      "anonymous";
+
+    if (await isReservationRateLimited(clientIp)) {
+      return NextResponse.json(
+        { error: "Too many reservation requests. Try again shortly." },
+        { status: 429 },
+      );
+    }
+
     const body = await req.json();
     const parsed = ReserveSchema.safeParse(body);
 
@@ -21,14 +59,28 @@ export async function POST(req: NextRequest) {
     }
 
     const { productId, warehouseId, quantity } = parsed.data;
-
     const idempotencyKey = req.headers.get("Idempotency-Key");
+
     if (idempotencyKey) {
+      const cachedReservationId =
+        await getIdempotentReservationId(idempotencyKey);
+
+      if (cachedReservationId) {
+        const cached = await prisma.reservation.findUnique({
+          where: { id: cachedReservationId },
+          include: reservationInclude,
+        });
+        if (cached) return NextResponse.json(cached, { status: 200 });
+      }
+
       const existing = await prisma.reservation.findUnique({
         where: { idempotencyKey },
+        include: reservationInclude,
       });
       if (existing) return NextResponse.json(existing, { status: 200 });
     }
+
+    const expiresAt = new Date(Date.now() + RESERVATION_HOLD_MS);
 
     const reservation = await prisma.$transaction(async (tx) => {
       const rowsAffected = await tx.$executeRaw`
@@ -49,19 +101,23 @@ export async function POST(req: NextRequest) {
           warehouseId,
           quantity,
           status: "PENDING",
-          expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+          expiresAt,
           ...(idempotencyKey ? { idempotencyKey } : {}),
         },
-        include: {
-          product: { select: { id: true, name: true } },
-          warehouse: { select: { id: true, name: true } },
-        },
+        include: reservationInclude,
       });
     });
 
+    if (idempotencyKey) {
+      await setIdempotentReservationId(idempotencyKey, reservation.id);
+    }
+
+    await registerReservationExpiry(reservation.id, expiresAt);
+    await invalidateProductsCache();
+
     return NextResponse.json(reservation, { status: 201 });
-  } catch (err: any) {
-    if (err.message === "INSUFFICIENT_STOCK") {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "INSUFFICIENT_STOCK") {
       return NextResponse.json(
         { error: "Not enough stock available" },
         { status: 409 },

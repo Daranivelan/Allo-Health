@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  afterStockMutation,
+  releasePendingReservation,
+} from "@/lib/reservations.server";
 
 export async function POST(
   _req: NextRequest,
@@ -8,28 +12,31 @@ export async function POST(
   const { id } = await params;
 
   try {
+    const reservation = await prisma.reservation.findUnique({ where: { id } });
+
+    if (!reservation) {
+      return NextResponse.json(
+        { error: "Reservation not found" },
+        { status: 404 },
+      );
+    }
+
+    if (reservation.status !== "PENDING") {
+      return NextResponse.json(
+        { error: "Reservation not pending" },
+        { status: 409 },
+      );
+    }
+
+    if (new Date() > reservation.expiresAt) {
+      await releasePendingReservation(reservation);
+      return NextResponse.json(
+        { error: "Reservation has expired" },
+        { status: 410 },
+      );
+    }
+
     const result = await prisma.$transaction(async (tx) => {
-      const reservation = await tx.reservation.findUnique({ where: { id } });
-
-      if (!reservation) throw new Error("NOT_FOUND");
-      if (reservation.status !== "PENDING") throw new Error("NOT_PENDING");
-      if (new Date() > reservation.expiresAt) {
-        await tx.stock.update({
-          where: {
-            productId_warehouseId: {
-              productId: reservation.productId,
-              warehouseId: reservation.warehouseId,
-            },
-          },
-          data: { reservedUnits: { decrement: reservation.quantity } },
-        });
-        await tx.reservation.update({
-          where: { id },
-          data: { status: "RELEASED" },
-        });
-        throw new Error("EXPIRED");
-      }
-
       await tx.stock.update({
         where: {
           productId_warehouseId: {
@@ -53,23 +60,10 @@ export async function POST(
       });
     });
 
+    await afterStockMutation(id);
+
     return NextResponse.json(result);
-  } catch (err: any) {
-    if (err.message === "NOT_FOUND")
-      return NextResponse.json(
-        { error: "Reservation not found" },
-        { status: 404 },
-      );
-    if (err.message === "NOT_PENDING")
-      return NextResponse.json(
-        { error: "Reservation not pending" },
-        { status: 409 },
-      );
-    if (err.message === "EXPIRED")
-      return NextResponse.json(
-        { error: "Reservation has expired" },
-        { status: 410 },
-      );
+  } catch (err) {
     console.error("[confirm]", err);
     return NextResponse.json(
       { error: "Internal server error" },
