@@ -27,8 +27,8 @@ export function TopNav() {
   }, []);
 
   return (
-    <header className="z-30 shrink-0 border-b border-[#e0bfb9] bg-[#fbf9f4]">
-      <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-6">
+    <header className="sticky top-0 z-30 shrink-0 border-b border-[#e0bfb9] bg-[#fbf9f4]">
+      <div className="flex h-14 items-center justify-between px-6">
         <div className="flex items-center gap-3">
           <h1 className="font-[family-name:var(--font-dm-serif)] text-2xl leading-[31.2px] text-[#1b1c19]">
             stock <span className="text-[#c84b31]">pulse</span>
