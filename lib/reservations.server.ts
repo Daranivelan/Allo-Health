@@ -144,11 +144,16 @@ export async function getReservationById(
   return serializeReservation(reservation);
 }
 
-export async function getPendingReservations(): Promise<ReservationDetail[]> {
+export async function getPendingReservations(
+  userId?: string,
+): Promise<ReservationDetail[]> {
   await releaseExpiredReservations();
 
   const reservations = await prisma.reservation.findMany({
-    where: { status: "PENDING" },
+    where: {
+      status: "PENDING",
+      ...(userId ? { userId } : {}),
+    },
     include: reservationInclude,
     orderBy: { createdAt: "desc" },
   });

@@ -25,7 +25,8 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "stock pulse — Live Inventory",
-  description: "Reserve what you need. Operations portal for live inventory management.",
+  description:
+    "Reserve what you need. Operations portal for live inventory management.",
 };
 
 export default function RootLayout({
@@ -36,6 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${dmSerif.variable} ${dmMono.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="min-h-full font-[family-name:var(--font-outfit)]">

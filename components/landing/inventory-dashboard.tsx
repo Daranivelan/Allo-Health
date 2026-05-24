@@ -52,13 +52,33 @@ export function InventoryDashboard({
   );
 
   const filteredProducts = useMemo(() => {
-    return displayProducts.filter((product) => {
-      if (!productMatchesSearch(product, searchQuery)) return false;
+    return displayProducts.reduce<DisplayProduct[]>((acc, product) => {
+      if (!productMatchesSearch(product, searchQuery)) return acc;
 
-      if (activeFilter === "All Items") return true;
-      if (activeFilter === "In Stock") return productHasAvailableStock(product);
-      return productMatchesLocation(product, activeFilter);
-    });
+      if (activeFilter === "All Items") {
+        acc.push(product);
+        return acc;
+      }
+
+      if (activeFilter === "In Stock") {
+        if (productHasAvailableStock(product)) {
+          acc.push(product);
+        }
+        return acc;
+      }
+
+      const matchingWarehouses = product.warehouses.filter(
+        (warehouse) =>
+          warehouse.totalUnits > 0 &&
+          warehouse.location.toLowerCase().includes(activeFilter.toLowerCase()),
+      );
+
+      if (matchingWarehouses.length > 0) {
+        acc.push({ ...product, warehouses: matchingWarehouses });
+      }
+
+      return acc;
+    }, []);
   }, [activeFilter, displayProducts, searchQuery]);
 
   const heroStats = [

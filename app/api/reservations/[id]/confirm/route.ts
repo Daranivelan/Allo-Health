@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import {
   afterStockMutation,
   releasePendingReservation,
@@ -12,6 +13,11 @@ export async function POST(
   const { id } = await params;
 
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const reservation = await prisma.reservation.findUnique({ where: { id } });
 
     if (!reservation) {
@@ -19,6 +25,10 @@ export async function POST(
         { error: "Reservation not found" },
         { status: 404 },
       );
+    }
+
+    if (reservation.userId !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (reservation.status !== "PENDING") {

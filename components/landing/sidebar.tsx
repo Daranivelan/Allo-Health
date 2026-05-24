@@ -26,17 +26,6 @@ const mainNav = [
     icon: FileText,
     match: (path: string) => path.startsWith("/reservations"),
   },
-  {
-    label: "Reports",
-    href: "#",
-    icon: BarChart3,
-    match: () => false,
-  },
-] as const;
-
-const bottomNav = [
-  { label: "Settings", href: "#", icon: Settings },
-  { label: "Support", href: "#", icon: HelpCircle },
 ] as const;
 
 export function Sidebar() {
@@ -53,7 +42,7 @@ export function Sidebar() {
             <p className="font-[family-name:var(--font-dm-mono)] text-sm tracking-[0.28px] text-[#1b1c19]">
               Operations Portal
             </p>
-            <p className="text-sm text-[#58413c]">Manager Access</p>
+            <p className="text-sm text-[#58413c]">Manage Inventory</p>
           </div>
         </div>
 
@@ -87,19 +76,6 @@ export function Sidebar() {
           })}
         </nav>
       </div>
-
-      <nav className="flex flex-col gap-1 border-t border-[#e0bfb9] pt-4">
-        {bottomNav.map(({ label, href, icon: Icon }) => (
-          <Link
-            key={label}
-            href={href}
-            className="flex items-center gap-3 rounded-sm px-3 py-2 font-[family-name:var(--font-dm-mono)] text-sm tracking-[0.28px] text-[#58413c] transition-colors hover:bg-[rgba(200,75,49,0.05)]"
-          >
-            <Icon className="size-5 shrink-0" strokeWidth={1.75} />
-            {label}
-          </Link>
-        ))}
-      </nav>
     </aside>
   );
 }

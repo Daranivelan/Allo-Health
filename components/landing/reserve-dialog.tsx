@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
-import type { DisplayProduct, ReservationResponse } from "@/lib/inventory-types";
+import { useSession, signIn } from "next-auth/react";
+import type {
+  DisplayProduct,
+  ReservationResponse,
+} from "@/lib/inventory-types";
 import { createReservation } from "@/lib/inventory-client";
 import { cn } from "@/lib/utils";
 
@@ -20,32 +24,31 @@ export function ReserveDialog({
   onSuccess,
 }: ReserveDialogProps) {
   const availableWarehouses = useMemo(
-    () => product?.warehouses.filter((warehouse) => warehouse.quantity > 0) ?? [],
+    () =>
+      product?.warehouses.filter((warehouse) => warehouse.quantity > 0) ?? [],
     [product],
   );
 
   const [warehouseId, setWarehouseId] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [internalQuantity, setInternalQuantity] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { data: session, status } = useSession();
 
   const selectedWarehouse = availableWarehouses.find(
     (warehouse) => warehouse.warehouseId === warehouseId,
   );
   const maxQuantity = selectedWarehouse?.quantity ?? 1;
+  const quantity = Math.min(internalQuantity, maxQuantity);
 
   useEffect(() => {
-    if (!open || !product) return;
-    setWarehouseId(availableWarehouses[0]?.warehouseId ?? "");
-    setQuantity(1);
-    setError(null);
-  }, [open, product, availableWarehouses]);
-
-  useEffect(() => {
-    if (quantity > maxQuantity) {
-      setQuantity(Math.max(1, maxQuantity));
+    if (open && product) {
+      setWarehouseId(availableWarehouses[0]?.warehouseId ?? "");
+      setInternalQuantity(1);
+      setError(null);
     }
-  }, [maxQuantity, quantity]);
+  }, [open, product]); // Intentionally omitting availableWarehouses to fix cyclic render
 
   if (!open || !product) return null;
 
@@ -92,7 +95,23 @@ export function ReserveDialog({
           {product.title} · {product.sku}
         </p>
 
-        {availableWarehouses.length === 0 ? (
+        {status === "loading" ? (
+          <div className="mt-6 flex justify-center py-8">
+            <Loader2 className="size-6 animate-spin text-[#c84b31]" />
+          </div>
+        ) : status === "unauthenticated" ? (
+          <div className="mt-6 flex flex-col items-center justify-center space-y-4 py-6">
+            <p className="text-center text-sm text-[#58413c]">
+              Please sign in to reserve products.
+            </p>
+            <button
+              onClick={() => signIn("google")}
+              className="flex w-full items-center justify-center gap-2 rounded-sm bg-[#c84b31] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#a6331b]"
+            >
+              Sign In with Google
+            </button>
+          </div>
+        ) : availableWarehouses.length === 0 ? (
           <p className="mt-6 text-sm text-[#ba1a1a]">
             No available stock for this product.
           </p>
@@ -108,7 +127,10 @@ export function ReserveDialog({
                 className="w-full rounded-sm border border-[#e0bfb9] bg-white px-3 py-2 text-sm text-[#1b1c19] focus:border-[#c84b31] focus:outline-none"
               >
                 {availableWarehouses.map((warehouse) => (
-                  <option key={warehouse.warehouseId} value={warehouse.warehouseId}>
+                  <option
+                    key={warehouse.warehouseId}
+                    value={warehouse.warehouseId}
+                  >
                     {warehouse.name} ({warehouse.quantity} available)
                   </option>
                 ))}
@@ -125,7 +147,9 @@ export function ReserveDialog({
                 max={maxQuantity}
                 value={quantity}
                 onChange={(event) =>
-                  setQuantity(Number.parseInt(event.target.value, 10) || 1)
+                  setInternalQuantity(
+                    Number.parseInt(event.target.value, 10) || 1,
+                  )
                 }
                 className="w-full rounded-sm border border-[#e0bfb9] bg-white px-3 py-2 text-sm text-[#1b1c19] focus:border-[#c84b31] focus:outline-none"
               />

@@ -13,7 +13,11 @@ export function computeDashboardStats(
 ): DashboardStats {
   const unitsAvailable = products.reduce(
     (sum, product) =>
-      sum + product.stock.reduce((stockSum, entry) => stockSum + entry.availableUnits, 0),
+      sum +
+      product.stock.reduce(
+        (stockSum, entry) => stockSum + entry.availableUnits,
+        0,
+      ),
     0,
   );
 
@@ -42,7 +46,37 @@ function getStockLevel(available: number, total: number): StockLevel {
 }
 
 export function getProductEmoji(name: string): string {
-  const emojis = ["📦", "🔧", "⚙️", "🛠️", "📡", "🔌"];
+  const lowerName = name.toLowerCase();
+
+  if (lowerName.includes("headphone") || lowerName.includes("earbud"))
+    return "🎧";
+  if (lowerName.includes("keyboard")) return "⌨️";
+  if (lowerName.includes("mouse") || lowerName.includes("mice")) return "🖱️";
+  if (lowerName.includes("monitor") || lowerName.includes("display"))
+    return "🖥️";
+  if (lowerName.includes("laptop") || lowerName.includes("macbook"))
+    return "💻";
+  if (lowerName.includes("phone") || lowerName.includes("mobile")) return "📱";
+  if (lowerName.includes("watch")) return "⌚";
+  if (
+    lowerName.includes("charger") ||
+    lowerName.includes("adapter") ||
+    lowerName.includes("power")
+  )
+    return "🔌";
+  if (
+    lowerName.includes("cable") ||
+    lowerName.includes("hub") ||
+    lowerName.includes("usb")
+  )
+    return "🔗";
+  if (lowerName.includes("camera") || lowerName.includes("webcam")) return "📷";
+  if (lowerName.includes("speaker") || lowerName.includes("audio")) return "🔈";
+  if (lowerName.includes("console") || lowerName.includes("controller"))
+    return "🎮";
+  if (lowerName.includes("chair") || lowerName.includes("desk")) return "🪑";
+
+  const emojis = ["📦", "🔧", "⚙️", "🛠️", "📡", "🔋"];
   const index =
     name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) %
     emojis.length;
@@ -60,18 +94,20 @@ export function toDisplayProduct(product: ProductWithStock): DisplayProduct {
     emoji: getProductEmoji(product.name),
     title: product.name,
     description: product.description ?? "No description available.",
-    warehouses: product.stock.map((entry): DisplayWarehouseStock => ({
-      warehouseId: entry.warehouseId,
-      name: entry.warehouse.name,
-      location: entry.warehouse.location,
-      quantity: entry.availableUnits,
-      totalUnits: entry.totalUnits,
-      level: getStockLevel(entry.availableUnits, entry.totalUnits),
-      fillPercent:
-        entry.totalUnits > 0
-          ? Math.round((entry.availableUnits / entry.totalUnits) * 100)
-          : 0,
-    })),
+    warehouses: product.stock.map(
+      (entry): DisplayWarehouseStock => ({
+        warehouseId: entry.warehouseId,
+        name: entry.warehouse.name,
+        location: entry.warehouse.location,
+        quantity: entry.availableUnits,
+        totalUnits: entry.totalUnits,
+        level: getStockLevel(entry.availableUnits, entry.totalUnits),
+        fillPercent:
+          entry.totalUnits > 0
+            ? Math.round((entry.availableUnits / entry.totalUnits) * 100)
+            : 0,
+      }),
+    ),
   };
 }
 
@@ -91,8 +127,10 @@ export function productMatchesLocation(
   product: DisplayProduct,
   locationFilter: string,
 ): boolean {
-  return product.warehouses.some((warehouse) =>
-    warehouse.location.toLowerCase().includes(locationFilter.toLowerCase()),
+  return product.warehouses.some(
+    (warehouse) =>
+      warehouse.totalUnits > 0 &&
+      warehouse.location.toLowerCase().includes(locationFilter.toLowerCase()),
   );
 }
 
@@ -118,18 +156,20 @@ export function formatCountdown(expiresAt: string): {
   };
 }
 
-export function isReservationExpired(
-  reservation: { status: string; expiresAt: string },
-): boolean {
+export function isReservationExpired(reservation: {
+  status: string;
+  expiresAt: string;
+}): boolean {
   return (
     reservation.status !== "PENDING" ||
     new Date(reservation.expiresAt).getTime() <= Date.now()
   );
 }
 
-export function isReservationActive(
-  reservation: { status: string; expiresAt: string },
-): boolean {
+export function isReservationActive(reservation: {
+  status: string;
+  expiresAt: string;
+}): boolean {
   return (
     reservation.status === "PENDING" &&
     new Date(reservation.expiresAt).getTime() > Date.now()

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { RESERVATION_HOLD_MS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { invalidateProductsCache } from "@/lib/redis-cache";
+import { auth } from "@/auth";
 import {
   getIdempotentReservationId,
   isReservationRateLimited,
@@ -24,7 +25,12 @@ const reservationInclude = {
 
 export async function GET() {
   try {
-    return NextResponse.json(await getPendingReservations());
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json([]);
+    }
+
+    return NextResponse.json(await getPendingReservations(session.user.id));
   } catch (err) {
     console.error("[GET /api/reservations]", err);
     return NextResponse.json(
@@ -36,6 +42,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const clientIp =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
       req.headers.get("x-real-ip") ??
@@ -99,6 +110,7 @@ export async function POST(req: NextRequest) {
         data: {
           productId,
           warehouseId,
+          userId: session!.user!.id!,
           quantity,
           status: "PENDING",
           expiresAt,
