@@ -6,7 +6,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-[#fbf9f4]">
       <TopNav />
       <Sidebar />
-      <main className="pl-64">{children}</main>
+      <main className="min-w-0 md:pl-64">{children}</main>
     </div>
   );
 }
