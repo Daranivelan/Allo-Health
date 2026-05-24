@@ -6,10 +6,7 @@ import { useRouter } from "next/navigation";
 import { CircleCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { ReservationDetail } from "@/lib/inventory-types";
-import {
-  confirmReservation,
-  releaseReservation,
-} from "@/lib/inventory-client";
+import { confirmReservation, releaseReservation } from "@/lib/inventory-client";
 import {
   formatReservationId,
   getProductEmoji,
@@ -90,10 +87,10 @@ export function ReservationCompletion({
   }
 
   return (
-    <div className="mx-auto max-w-[1280px] p-6">
+    <div className="mx-auto max-w-[1280px] px-4 py-4 sm:px-6 sm:py-6">
       <div className="overflow-hidden rounded border border-[#e0bfb9] bg-white shadow-sm">
         <div className="grid min-h-[656px] lg:grid-cols-2">
-          <div className="flex flex-col justify-between p-16">
+          <div className="flex flex-col justify-between p-6 sm:p-8 lg:p-16">
             <div className="space-y-6">
               {isPending ? (
                 <div className="flex items-center gap-2">
@@ -111,11 +108,11 @@ export function ReservationCompletion({
                 </div>
               )}
 
-              <h1 className="font-[family-name:var(--font-dm-serif)] text-[32px] leading-[38.4px] text-[#1b1c19]">
+              <h1 className="font-[family-name:var(--font-dm-serif)] text-2xl leading-tight text-[#1b1c19] sm:text-[32px] sm:leading-[38.4px]">
                 Complete your reservation
               </h1>
 
-              <div className="flex gap-6 rounded-sm border border-[#e0bfb9] p-6">
+              <div className="flex flex-col gap-4 rounded-sm border border-[#e0bfb9] p-4 sm:flex-row sm:gap-6 sm:p-6">
                 <div className="flex size-16 shrink-0 items-center justify-center rounded-sm border border-[#e0bfb9] bg-[#f0eee9] text-[32px]">
                   {emoji}
                 </div>
@@ -132,7 +129,7 @@ export function ReservationCompletion({
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                 <div className="rounded-sm border border-[#e0bfb9] bg-[#f5f3ee] p-3">
                   <p className="font-[family-name:var(--font-dm-mono)] text-xs tracking-[0.48px] text-[#58413c] uppercase">
                     Res ID
@@ -153,7 +150,7 @@ export function ReservationCompletion({
             </div>
 
             {isPending ? (
-              <div className="mt-16 space-y-2">
+              <div className="mt-10 space-y-2 sm:mt-16">
                 <button
                   type="button"
                   onClick={handleConfirm}
@@ -194,7 +191,7 @@ export function ReservationCompletion({
             )}
           </div>
 
-          <div className="border-t border-[#e0bfb9] bg-[#f5f3ee] p-16 lg:border-t-0 lg:border-l">
+          <div className="border-t border-[#e0bfb9] bg-[#f5f3ee] p-6 sm:p-8 lg:border-t-0 lg:border-l lg:p-16">
             <div className="space-y-10">
               <div>
                 <p className="font-[family-name:var(--font-dm-mono)] text-sm tracking-[0.7px] text-[#58413c] uppercase">

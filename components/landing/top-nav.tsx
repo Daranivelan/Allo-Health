@@ -28,21 +28,21 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-30 shrink-0 border-b border-[#e0bfb9] bg-[#fbf9f4]">
-      <div className="flex h-14 items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <h1 className="font-[family-name:var(--font-dm-serif)] text-2xl leading-[31.2px] text-[#1b1c19]">
+      <div className="flex min-h-14 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <h1 className="font-[family-name:var(--font-dm-serif)] text-xl leading-[1.2] text-[#1b1c19] sm:text-2xl sm:leading-[31.2px]">
             stock <span className="text-[#c84b31]">pulse</span>
           </h1>
-          <span className="rounded-sm border border-[#c84b31] bg-[rgba(200,75,49,0.1)] px-2 py-1 font-[family-name:var(--font-dm-mono)] text-xs tracking-[0.48px] text-[#c84b31]">
+          <span className="hidden rounded-sm border border-[#c84b31] bg-[rgba(200,75,49,0.1)] px-2 py-1 font-[family-name:var(--font-dm-mono)] text-xs tracking-[0.48px] text-[#c84b31] sm:inline-flex">
             LIVE INVENTORY
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3 self-end sm:self-auto">
           <button
             type="button"
             aria-label="Notifications"
-            className="flex size-10 items-center justify-center rounded-xl text-[#1b1c19] transition-colors hover:bg-[#e4e2dd]/60"
+            className="flex size-9 items-center justify-center rounded-xl text-[#1b1c19] transition-colors hover:bg-[#e4e2dd]/60 sm:size-10"
           >
             <Bell className="size-5" strokeWidth={1.75} />
           </button>
@@ -50,7 +50,7 @@ export function TopNav() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen((prev) => !prev)}
-              className="relative size-8 overflow-hidden rounded-xl border border-[#e0bfb9] hover:opacity-80 transition-opacity flex items-center justify-center bg-gray-100"
+              className="relative flex size-8 items-center justify-center overflow-hidden rounded-xl border border-[#e0bfb9] bg-gray-100 transition-opacity hover:opacity-80"
             >
               {status === "loading" ? (
                 <Loader2 className="size-4 animate-spin text-gray-500" />

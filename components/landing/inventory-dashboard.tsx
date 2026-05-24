@@ -97,7 +97,7 @@ export function InventoryDashboard({
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-[1280px] space-y-6 p-6">
+      <div className="mx-auto max-w-[1280px] space-y-6 px-4 py-4 sm:px-6 sm:py-6">
         <HeroSection stats={heroStats} />
         <FilterBar
           filters={["All Items", "In Stock", ...locationFilters]}
@@ -117,7 +117,7 @@ export function InventoryDashboard({
             </p>
           </div>
         ) : (
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 sm:gap-6">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}

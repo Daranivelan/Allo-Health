@@ -13,9 +13,9 @@ type ReservationsListProps = {
 export function ReservationsList({ reservations }: ReservationsListProps) {
   if (reservations.length === 0) {
     return (
-      <div className="mx-auto max-w-[1280px] p-6">
+      <div className="mx-auto max-w-[1280px] px-4 py-4 sm:px-6 sm:py-6">
         <div className="rounded-lg border border-dashed border-[#e0bfb9] bg-white px-6 py-16 text-center">
-          <h1 className="font-[family-name:var(--font-dm-serif)] text-3xl text-[#1b1c19]">
+          <h1 className="font-[family-name:var(--font-dm-serif)] text-2xl text-[#1b1c19] sm:text-3xl">
             No active reservations
           </h1>
           <p className="mt-2 text-sm text-[#58413c]">
@@ -33,9 +33,9 @@ export function ReservationsList({ reservations }: ReservationsListProps) {
   }
 
   return (
-    <div className="mx-auto max-w-[1280px] space-y-6 p-6">
+    <div className="mx-auto max-w-[1280px] space-y-6 px-4 py-4 sm:px-6 sm:py-6">
       <div>
-        <h1 className="font-[family-name:var(--font-dm-serif)] text-3xl text-[#1b1c19]">
+        <h1 className="font-[family-name:var(--font-dm-serif)] text-2xl text-[#1b1c19] sm:text-3xl">
           Active reservations
         </h1>
         <p className="mt-1 text-sm text-[#58413c]">
@@ -54,14 +54,14 @@ export function ReservationsList({ reservations }: ReservationsListProps) {
             <Link
               key={reservation.id}
               href={`/reservations/${reservation.id}`}
-              className="flex items-center justify-between rounded border border-[#e0bfb9] bg-white p-5 transition-colors hover:border-[#c84b31]"
+              className="flex flex-col gap-4 rounded border border-[#e0bfb9] bg-white p-4 transition-colors hover:border-[#c84b31] sm:flex-row sm:items-center sm:justify-between sm:p-5"
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 min-w-0">
                 <span className="flex size-12 items-center justify-center rounded-sm border border-[#e0bfb9] bg-[#f0eee9] text-2xl">
                   {getProductEmoji(reservation.product.name)}
                 </span>
-                <div>
-                  <p className="font-medium text-[#1b1c19]">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-[#1b1c19]">
                     {reservation.product.name}
                   </p>
                   <p className="text-sm text-[#58413c]">
@@ -70,7 +70,7 @@ export function ReservationsList({ reservations }: ReservationsListProps) {
                   </p>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <p className="font-[family-name:var(--font-dm-mono)] text-sm tracking-[0.28px] text-[#a6331b]">
                   {timeLabel}
                 </p>
